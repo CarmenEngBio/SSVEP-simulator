@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+<title>SSVEP BCI Keypad</title>
+
+<style>
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:#05070a;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-family:Arial, Helvetica, sans-serif;
+  color:white;
+}
+
+.container{
+  width:360px;
+  background:#0d1117;
+  border:1px solid #1f2937;
+  border-radius:20px;
+  padding:22px;
+  box-shadow:0 0 30px rgba(0,0,0,0.5);
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:18px;
+}
+
+.title{
+  font-size:20px;
+  font-weight:bold;
+}
+
+.connection{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:12px;
+  color:#9ca3af;
+}
+
+.dot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:#00ff66;
+  box-shadow:0 0 8px #00ff66;
+}
+
+.display{
+  background:black;
+  border:1px solid #222;
+  border-radius:14px;
+  padding:16px;
+  margin-bottom:20px;
+}
+
+.display-label{
+  font-size:11px;
+  color:#6b7280;
+  margin-bottom:8px;
+}
+
+.display-number{
+  font-size:32px;
+  letter-spacing:4px;
+  min-height:38px;
+}
+
+.cursor{
+  animation:blink 1s infinite;
+  color:#aaa;
+}
+
+@keyframes blink{
+  0%,100%{opacity:1}
+  50%{opacity:0}
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+
+.key,
+.icon{
+  height:82px;
+  border-radius:16px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  overflow:hidden;
+}
+
+.key{
+  background:#111827;
+  border:1px solid #293548;
+  opacity:0.25;
+  transition:0.2s;
+}
+
+.key-num{
+  font-size:30px;
+  font-weight:bold;
+}
+
+.freq{
+  font-size:11px;
+  color:#9ca3af;
+  margin-top:4px;
+}
+
+.icon{
+  background:#0b0f14;
+  border:1px solid #1f2937;
+  opacity:0.6;
+}
+
+.icon span{
+  font-size:24px;
+}
+
+.green{
+  color:#00ff66;
+}
+
+.red{
+  color:#ff5c5c;
+}
+
+.selected{
+  background:#12351d !important;
+  border-color:#00ff66 !important;
+  opacity:1 !important;
+  box-shadow:0 0 16px rgba(0,255,100,0.35);
+}
+
+.target{
+  border-color:#4ea1ff !important;
+  box-shadow:0 0 14px rgba(78,161,255,0.35);
+}
+
+.processing{
+  animation:pulse 0.8s infinite;
+}
+
+@keyframes pulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.04)}
+  100%{transform:scale(1)}
+}
+
+/* Simulated SSVEP frequencies */
+
+.f1{animation:f1 0.20s infinite;}
+.f2{animation:f2 0.16s infinite;}
+.f3{animation:f3 0.13s infinite;}
+.f4{animation:f4 0.10s infinite;}
+
+@keyframes f1{
+  0%,50%{opacity:1}
+  51%,100%{opacity:0.2}
+}
+
+@keyframes f2{
+  0%,50%{opacity:1}
+  51%,100%{opacity:0.2}
+}
+
+@keyframes f3{
+  0%,50%{opacity:1}
+  51%,100%{opacity:0.2}
+}
+
+@keyframes f4{
+  0%,50%{opacity:1}
+  51%,100%{opacity:0.2}
+}
+
+.controls{
+  margin-top:18px;
+}
+
+button{
+  width:100%;
+  border:none;
+  border-radius:12px;
+  padding:12px;
+  background:#00c853;
+  color:black;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+button:hover{
+  transform:translateY(-1px);
+}
+
+.status{
+  margin-top:14px;
+  text-align:center;
+  color:#9ca3af;
+  font-size:13px;
+  min-height:18px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="header">
+
+    <div class="title">
+      SSVEP BCI Keypad
+    </div>
+
+    <div class="connection">
+      <div class="dot"></div>
+      EEG Connected
+    </div>
+
+  </div>
+
+  <div class="display">
+
+    <div class="display-label">
+      REAL-TIME OUTPUT
+    </div>
+
+    <div class="display-number" id="disp">
+      <span class="cursor">_</span>
+    </div>
+
+  </div>
+
+  <div class="grid">
+
+    <div class="key f1" id="k1">
+      <div class="key-num">1</div>
+      <div class="freq">8 Hz</div>
+    </div>
+
+    <div class="key f2" id="k2">
+      <div class="key-num">2</div>
+      <div class="freq">10 Hz</div>
+    </div>
+
+    <div class="key f3" id="k3">
+      <div class="key-num">3</div>
+      <div class="freq">12 Hz</div>
+    </div>
+
+    <div class="key f2" id="k4">
+      <div class="key-num">4</div>
+      <div class="freq">9 Hz</div>
+    </div>
+
+    <div class="key f3" id="k5">
+      <div class="key-num">5</div>
+      <div class="freq">11 Hz</div>
+    </div>
+
+    <div class="key f4" id="k6">
+      <div class="key-num">6</div>
+      <div class="freq">13 Hz</div>
+    </div>
+
+    <div class="key f1" id="k7">
+      <div class="key-num">7</div>
+      <div class="freq">7 Hz</div>
+    </div>
+
+    <div class="key f2" id="k8">
+      <div class="key-num">8</div>
+      <div class="freq">14 Hz</div>
+    </div>
+
+    <div class="key f3" id="k9">
+      <div class="key-num">9</div>
+      <div class="freq">15 Hz</div>
+    </div>
+
+    <div class="icon green">
+      <span>📲</span>
+    </div>
+
+    <div class="key f4" id="k0">
+      <div class="key-num">0</div>
+      <div class="freq">16 Hz</div>
+    </div>
+
+    <div class="icon red">
+      <span>❌📞</span>
+    </div>
+
+  </div>
+
+  <div class="controls">
+
+    <button onclick="startSSVEP()">
+      Start Detection
+    </button>
+
+  </div>
+
+  <div class="status" id="status">
+    System Ready
+  </div>
+
+</div>
+
+<script>
+
+const keys = [
+  'k1','k2','k3',
+  'k4','k5','k6',
+  'k7','k8','k9',
+  'k0'
+];
+
+const keyVals = {
+  k1:'1',
+  k2:'2',
+  k3:'3',
+  k4:'4',
+  k5:'5',
+  k6:'6',
+  k7:'7',
+  k8:'8',
+  k9:'9',
+  k0:'0'
+};
+
+let scores = {};
+let running = false;
+let targetKey = null;
+let number = '';
+
+function updateDisplay(){
+
+  document.getElementById('disp').innerHTML =
+    (number || '') +
+    '<span class="cursor">_</span>';
+}
+
+function startSSVEP(){
+
+  if(running) return;
+
+  running = true;
+
+  keys.forEach(k=>{
+
+    scores[k] = 0;
+
+    document.getElementById(k)
+      .classList.remove(
+        'selected',
+        'target',
+        'processing'
+      );
+  });
+
+  targetKey =
+    keys[Math.floor(Math.random()*keys.length)];
+
+  document.getElementById(targetKey)
+    .classList.add('target','processing');
+
+  document.getElementById('status').textContent =
+    'Processing EEG data...';
+
+  let t = 0;
+
+  let interval = setInterval(()=>{
+
+    keys.forEach(k=>{
+
+      if(k === targetKey){
+        scores[k] += 1.2 + Math.random()*0.3;
+      }
+      else{
+        scores[k] += Math.random()*0.25;
+      }
+    });
+
+    t++;
+
+    if(t > 50){
+
+      clearInterval(interval);
+
+      finalize();
+    }
+
+  },100);
+}
+
+function finalize(){
+
+  let best = keys[0];
+
+  keys.forEach(k=>{
+
+    if(scores[k] > scores[best]){
+      best = k;
+    }
+  });
+
+  document.getElementById(best)
+    .classList.remove(
+      'target',
+      'processing'
+    );
+
+  document.getElementById(best)
+    .classList.add('selected');
+
+  number += keyVals[best];
+
+  updateDisplay();
+
+  running = false;
+
+  document.getElementById('status').textContent =
+    'Detected command: ' + keyVals[best];
+}
+
+updateDisplay();
+
+</script>
+
+</body>
+</html>
